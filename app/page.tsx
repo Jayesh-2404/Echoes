@@ -1,103 +1,109 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, FormEvent } from 'react';
+
+interface Message {
+  id: string;
+  message: string;
+  createdAt: string;
+}
+
+interface Status {
+  loading: boolean;
+  error: string;
+  success: string;
+}
+
+export default function HomePage() {
+  const [recipientId, setRecipientId] = useState('');
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [status, setStatus] = useState<Status>({ loading: false, error: '', success: '' });
+
+  const handleSendMessage = async (e: FormEvent) => {
+    e.preventDefault();
+    setStatus({ loading: true, error: '', success: '' });
+
+    try {
+      const res = await fetch('/api/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientId, message }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      setStatus({ loading: false, success: 'Message sent successfully!', error: '' });
+      setMessage('');
+      handleGetMessages(); // Refresh messages after sending
+    } catch (err: any) {
+      setStatus({ loading: false, error: err.message, success: '' });
+    }
+  };
+
+  const handleGetMessages = async () => {
+    if (!recipientId) return;
+    setStatus({ loading: true, error: '', success: '' });
+    try {
+      const res = await fetch(`/api/messages?recipientId=${recipientId}`);
+      if (!res.ok) throw new Error('Failed to fetch messages');
+      const data: Message[] = await res.json();
+      setMessages(data);
+      setStatus({ loading: false, success: 'Messages loaded.', error: '' });
+    } catch (err: any) {
+      setStatus({ loading: false, error: err.message, success: '' });
+    }
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main style={{ fontFamily: 'sans-serif', maxWidth: '600px', margin: 'auto', padding: '2rem' }}>
+      <h1>Anonymous Messages</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      {status.error && <p style={{ color: '#d32f2f', background: '#ffebee', padding: '0.5rem', borderRadius: '4px' }}>Error: {status.error}</p>}
+      {status.success && <p style={{ color: '#388e3c', background: '#e8f5e9', padding: '0.5rem', borderRadius: '4px' }}>{status.success}</p>}
+
+      <form onSubmit={handleSendMessage} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <input
+          type="text"
+          placeholder="Recipient ID (e.g., a CUID)"
+          value={recipientId}
+          onChange={(e) => setRecipientId(e.target.value)}
+          required
+          style={{ padding: '0.5rem' }}
+        />
+        <textarea
+          placeholder="Your anonymous message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          required
+          style={{ padding: '0.5rem', minHeight: '100px' }}
+        />
+        <button type="submit" disabled={status.loading} style={{ padding: '0.75rem', cursor: 'pointer' }}>
+          {status.loading ? 'Sending...' : 'Send Message'}
+        </button>
+      </form>
+
+      <hr style={{ margin: '2rem 0' }}/>
+
+      <div>
+        <h2>Inbox for "{recipientId || '...'}"</h2>
+        <button onClick={handleGetMessages} disabled={!recipientId || status.loading}>
+          {status.loading ? 'Loading...' : 'Refresh Messages'}
+        </button>
+        <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem' }}>
+          {messages.length === 0 && <p>No messages yet.</p>}
+          {messages.map((msg) => (
+            <li key={msg.id} style={{ border: '1px solid #ddd', padding: '1rem', margin: '0.5rem 0', borderRadius: '4px' }}>
+              <p>{msg.message}</p>
+              <small>Received: {new Date(msg.createdAt).toLocaleString()}</small>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </main>
   );
 }
