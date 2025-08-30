@@ -4,29 +4,29 @@ import { standardRateLimiter, suspiciousRateLimiter } from '@/src/utils/rate-lim
 import { sendMessageSchema } from '@/src/schemas/message.schema';
 import { messageService } from '@/src/services/message.service';
 
+// FILE: app/api/send-message/route.ts
+// ... imports remain the same ...
+
 export async function POST(request: NextRequest) {
   const ip = request.ip ?? '127.0.0.1';
 
   try {
-    // Step 1: Determine which rate limiter to apply based on IP reputation.
+    // Rate limiting logic remains the same
     const isSuspicious = await messageService.isIpSuspicious(ip);
     const limiter = isSuspicious ? suspiciousRateLimiter : standardRateLimiter;
-
-    // Apply the chosen rate limiter.
     await limiter.consume(ip);
 
-    // Step 2: Validate the request body.
+    // Validation logic remains the same
     const body = await request.json();
     const payload = sendMessageSchema.parse(body);
 
-    // Step 3: Process the message. The service will handle content analysis
-    // and flag the IP if necessary.
+    // Service call remains the same, but payload now expects userId
     const message = await messageService.processNewMessage(payload, ip);
 
     return NextResponse.json({ success: true, messageId: message.id }, { status: 201 });
 
   } catch (error: any) {
-    // Step 4: Handle known errors gracefully.
+    // Error handling remains the same
     if (error.name === 'RateLimiterRes') {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }

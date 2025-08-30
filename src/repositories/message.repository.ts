@@ -5,16 +5,16 @@ import { Message } from '@prisma/client';
 
 class MessageRepository {
   public async create(data: {
-    recipientId: string;
+    userId: string;
     message: string;
     ipAddress: string;
   }): Promise<Message> {
     return prisma.message.create({ data });
   }
 
-  public async findByRecipientId(recipientId: string): Promise<Message[]> {
+  public async findByUserId(userId: string): Promise<Message[]> {
     return prisma.message.findMany({
-      where: { recipientId },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       // Pagination is a crucial safeguard against fetching massive amounts of data.
       take: 50,
