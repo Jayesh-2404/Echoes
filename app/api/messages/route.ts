@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
 import { messageService } from '@/src/services/message.service';
+import { cookies } from 'next/headers';
 
 const getMessagesSchema = z.object({
   userId: z.string().cuid(),
-  token: z.string().cuid(),
 });
 
 export async function GET(request: NextRequest) {
