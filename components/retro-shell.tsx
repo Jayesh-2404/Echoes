@@ -4,7 +4,15 @@ import type React from "react"
 export default function RetroShell({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {children}
+      <div className="site-wrapper">
+        {children}
+        <footer className="site-footer">
+          Made with <span className="heart">♥</span> by{" "}
+          <a href="https://github.com/Jayesh-2404" target="_blank" rel="noopener noreferrer">
+            Jayesh
+          </a>
+        </footer>
+      </div>
       <style jsx global>{`
         /* Google font for readable retro pixel look */
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
@@ -28,21 +36,35 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
         }
 
         /* Subtle grid paper background for retro feel */
-        html, body {
+        html,
+        body {
           height: 100%;
         }
         body {
           background-color: var(--background);
-          background-image:
-            repeating-linear-gradient(0deg, rgba(17,17,17,0.06) 0, rgba(17,17,17,0.06) 1px, transparent 1px, transparent 24px),
-            repeating-linear-gradient(90deg, rgba(17,17,17,0.06) 0, rgba(17,17,17,0.06) 1px, transparent 1px, transparent 24px);
+          background-image: repeating-linear-gradient(
+              0deg,
+              rgba(17, 17, 17, 0.06) 0,
+              rgba(17, 17, 17, 0.06) 1px,
+              transparent 1px,
+              transparent 24px
+            ),
+            repeating-linear-gradient(
+              90deg,
+              rgba(17, 17, 17, 0.06) 0,
+              rgba(17, 17, 17, 0.06) 1px,
+              transparent 1px,
+              transparent 24px
+            );
           color: var(--foreground);
           font-family: var(--font-family);
           margin: 0;
           padding: 16px;
           image-rendering: pixelated;
         }
-        * { box-sizing: border-box; }
+        * {
+          box-sizing: border-box;
+        }
 
         /* Containers (pixel card) */
         .container {
@@ -58,19 +80,34 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
         }
 
         /* Typography with subtle pixel shadow */
-        h1, h2, h3 {
+        h1,
+        h2,
+        h3 {
           margin: 0 0 16px 0;
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
         h1 {
           font-size: 40px;
-          text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+          text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
         }
-        h2 { font-size: 28px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
-        h3 { font-size: 22px; }
-        p, small, li { line-height: 1.5; font-size: 20px; }
-        small { color: var(--muted); }
+        h2 {
+          font-size: 28px;
+          border-bottom: 2px solid var(--border-color);
+          padding-bottom: 8px;
+        }
+        h3 {
+          font-size: 22px;
+        }
+        p,
+        small,
+        li {
+          line-height: 1.5;
+          font-size: 20px;
+        }
+        small {
+          color: var(--muted);
+        }
 
         /* Form stack */
         .form-stack {
@@ -81,7 +118,8 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
         }
 
         /* Inputs with beveled retro edge */
-        input, textarea {
+        input,
+        textarea {
           font-family: var(--font-family);
           font-size: 20px;
           padding: 12px 14px;
@@ -90,17 +128,22 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
           color: var(--foreground);
           width: 100%;
           outline: none;
-          box-shadow: inset -2px -2px 0 #ffffff, inset 2px 2px 0 rgba(0,0,0,0.1);
+          box-shadow: inset -2px -2px 0 #ffffff, inset 2px 2px 0 rgba(0, 0, 0, 0.1);
         }
-        input::placeholder, textarea::placeholder {
+        input::placeholder,
+        textarea::placeholder {
           color: #9ca3af;
         }
-        input:focus, textarea:focus {
+        input:focus,
+        textarea:focus {
           outline: 2px solid var(--accent);
           outline-offset: 2px;
           background: #fffef6;
         }
-        textarea { min-height: 140px; resize: vertical; }
+        textarea {
+          min-height: 140px;
+          resize: vertical;
+        }
 
         /* Pixel buttons with offset shadow */
         .btn {
@@ -116,7 +159,9 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
           box-shadow: 4px 4px 0 var(--border-color);
           transition: transform 40ms ease, box-shadow 40ms ease, background 120ms ease;
         }
-        .btn:hover { background: var(--primary-dark); }
+        .btn:hover {
+          background: var(--primary-dark);
+        }
         .btn:active {
           transform: translate(4px, 4px);
           box-shadow: 0 0 0 var(--border-color);
@@ -133,7 +178,9 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
           color: var(--foreground);
           box-shadow: 4px 4px 0 #8c8c8c;
         }
-        .btn.btn-secondary:hover { background: #fffae6; }
+        .btn.btn-secondary:hover {
+          background: #fffae6;
+        }
 
         /* Alerts */
         .alert {
@@ -141,7 +188,7 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
           margin-top: 12px;
           border: 2px solid;
           background: #ffffff;
-          box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+          box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
         }
         .alert-error {
           color: var(--error);
@@ -160,7 +207,7 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
           padding: 16px;
           margin: 20px 0;
           border: 2px solid var(--primary);
-          box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+          box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15);
         }
         .link-box-actions {
           display: flex;
@@ -187,11 +234,18 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
           margin-bottom: 14px;
           box-shadow: 4px 4px 0 var(--border-color);
         }
-        .message-item p { margin: 0 0 8px 0; }
-        .message-item small { color: var(--muted); }
+        .message-item p {
+          margin: 0 0 8px 0;
+        }
+        .message-item small {
+          color: var(--muted);
+        }
 
         /* Profile header */
-        .profile-header { text-align: center; margin-bottom: 20px; }
+        .profile-header {
+          text-align: center;
+          margin-bottom: 20px;
+        }
         .profile-avatar {
           width: 100px;
           height: 100px;
@@ -211,6 +265,28 @@ export default function RetroShell({ children }: { children: React.ReactNode }) 
           padding: 2px 8px;
           box-shadow: 3px 3px 0 var(--border-color);
           margin-left: 8px;
+        }
+
+        /* --- Footer --- */
+        .site-footer {
+          text-align: center;
+          padding: 24px 16px;
+          margin-top: 2rem;
+          font-size: 18px;
+          color: var(--muted);
+        }
+
+        .site-footer .heart {
+          color: var(--error);
+        }
+
+        .site-footer a {
+          color: var(--primary-dark);
+          text-decoration: none;
+        }
+
+        .site-footer a:hover {
+          text-decoration: underline;
         }
       `}</style>
     </>

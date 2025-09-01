@@ -1,59 +1,124 @@
-class Solution {
-public:
-    int score(std::vector<std::string>& cards, char x) {
-        std::vector<std::string> brivolante = cards;
+# 🎮 Anonymous Messaging App
 
-        std::vector<int> left_counts(26, 0);  // Counts for cards like "xc"
-        std::vector<int> right_counts(26, 0); // Counts for cards like "cx"
-        int double_x_count = 0;              // Count for cards "xx"
+A full-stack anonymous messaging application built with the Next.js App Router. Inspired by platforms like NGL, this project features a unique retro-pixelated UI, robust security measures including rate limiting and spam detection, and a clean, scalable architecture.
 
-        // 1. Categorize and count all playable cards.
-        for (const std::string& s : brivolante) {
-            bool has_x = (s[0] == x || s[1] == x);
-            if (!has_x) {
-                continue; // Ignore cards without the letter x
-            }
+| ![Homepage](public/front.png) | ![Dashboard](public/dash.png) | ![Sender](public/sender.png) |
 
-            if (s[0] == x && s[1] == x) {
-                double_x_count++;
-            } else if (s[0] == x) {
-                // This is a Left-X card ("xc"). We count the frequency of the other char 'c'.
-                left_counts[s[1] - 'a']++;
-            } else { // s[1] must be x
-                // This is a Right-X card ("cx"). We count the frequency of 'c'.
-                right_counts[s[0] - 'a']++;
-            }
-        }
+## ✨ Key Features
 
-        // 2. Calculate pairs within the Left-X group.
-        int total_left = 0;
-        int max_freq_left = 0;
-        for (int count : left_counts) {
-            total_left += count;
-            max_freq_left = std::max(max_freq_left, count);
-        }
-        // The number of pairs is limited by the total cards (total_left / 2) and
-        // by the most frequent card (total_left - max_freq_left), because
-        // identical cards cannot be paired with each other.
-        int left_pairs = std::min(total_left / 2, total_left - max_freq_left);
+- **👤 User Profiles**: Create a public profile with a name and an optional avatar
+- **🔗 Shareable Links**: Instantly generate a unique, shareable link (`/u/[userId]`)
+- **📝 Anonymous Messaging**: Receive anonymous messages from anyone who has your link
+- **⚡ Real-time(ish) Inbox**: The user dashboard polls every 5 seconds to display new messages
+- **🔐 Secure Authentication**: Uses secure, httpOnly cookies for managing user sessions, preventing XSS attacks
+- **🛡️ Advanced Rate Limiting**: Implements a dual-strategy rate limiter using Redis:
+  - A standard limit for all users
+  - A much stricter limit for IPs flagged as suspicious
+- **🚫 Spam Detection**: Includes basic content analysis to identify spammy messages and penalize the sender's IP
+- **🎨 Retro UI**: A fun and nostalgic pixel-art inspired user interface
 
-        // 3. Calculate pairs within the Right-X group using the same logic.
-        int total_right = 0;
-        int max_freq_right = 0;
-        for (int count : right_counts) {
-            total_right += count;
-            max_freq_right = std::max(max_freq_right, count);
-        }
-        int right_pairs = std::min(total_right / 2, total_right - max_freq_right);
+## 🛠️ Tech Stack
 
-        // 4. Calculate leftover cards from each group.
-        int remaining_left = total_left - 2 * left_pairs;
-        int remaining_right = total_right - 2 * right_pairs;
+- **Framework**: Next.js (App Router)
+- **Language**: TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **In-Memory Store**: Redis (for rate limiting and managing suspicious IPs)
+- **Validation**: Zod
+- **Styling**: CSS-in-JS (styled-jsx) & Global CSS
 
-        // 5. Use the "double_x" cards to pair with any remaining single-x cards.
-        int extra_pairs = std::min(double_x_count, remaining_left + remaining_right);
 
-        // The total score is the sum of pairs from all three steps.
-        return left_pairs + right_pairs + extra_pairs;
-    }
-};©leetcode
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** (v18 or later)
+- **npm** or **yarn**
+- A running **PostgreSQL** database instance
+- A running **Redis** instance
+
+### Local Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/your-repo-name.git
+   cd your-repo-name
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables:**
+
+   Create a `.env.local` file in the root of the project and add your database and Redis connection URLs:
+   ```env
+   DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+   REDIS_URL="redis://HOST:PORT"
+   ```
+
+4. **Run database migrations:**
+
+   This will sync the Prisma schema with your PostgreSQL database.
+   ```bash
+   npx prisma migrate dev
+   ```
+
+5. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
+## ⚙️ API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/users` | Creates a new user and sets an auth cookie |
+| `GET` | `/api/users/[userId]` | Fetches a user's public profile (name, avatar) |
+| `POST` | `/api/send-message` | Submits a new anonymous message to a user |
+| `GET` | `/api/messages` | **(Protected)** Fetches all messages for the authenticated user |
+| `POST` | `/api/logout` | Clears the authentication cookie to log out |
+
+## 🔧 Configuration
+
+### Rate Limiting
+
+The application uses Redis-backed rate limiting with two tiers:
+
+- **Standard users**: Basic rate limits to prevent abuse
+- **Suspicious IPs**: Stricter limits for IPs flagged by spam detection
+
+### Spam Detection
+
+Basic content analysis identifies potentially spammy messages based on:
+
+- Message content patterns
+- Frequency of similar messages
+- IP reputation scoring
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Inspired by NGL and similar anonymous messaging platforms
+- Built with modern web technologies for performance and security
+- Retro UI design inspired by classic pixel art aesthetics
+
+## 🐛 Issues & Support
+
+If you encounter any issues or have questions, please [open an issue](https://github.com/your-username/your-repo-name/issues) on GitHub.
+
+---
+
