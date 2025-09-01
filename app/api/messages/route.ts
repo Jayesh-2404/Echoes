@@ -10,22 +10,30 @@ const getMessagesSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const userId = request.nextUrl.searchParams.get('userId');
-    const token = request.nextUrl.searchParams.get('token');
+    const token = cookies().get('auth_token')?.value;
 
-    const query = getMessagesSchema.parse({ userId, token });
 
-    const messages = await messageService.getMessagesForUser(query.userId, query.token);
+    if (!userId || !token) {
+
+        throw new Error('Unauthorized');
+    }
+
+    const query = getMessagesSchema.parse({ userId });
+
+    const messages = await messageService.getMessagesForUser(query.userId, token);
 
     return NextResponse.json(messages);
 
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: 'Invalid or missing parameters' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid user ID format' }, { status: 400 });
     }
 
     if (error instanceof Error && error.message === 'Unauthorized') {
+      console.warn(`[API /messages] Unauthorized access denied.`);
       return NextResponse.json({ error: 'Access Denied' }, { status: 403 });
     }
+
     console.error('Error fetching messages:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

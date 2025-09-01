@@ -50,29 +50,32 @@ export default function SendMessagePage({ params }: { params: { userId: string }
     }
   };
 
-  if (!profile) {
-    return <main>{error || 'Loading...'}</main>;
+  if (!profile && !error) {
+    return <main className="container container-center">Loading...</main>;
+  }
+
+  if (error && !profile) {
+    return <main className="container container-center alert alert-error">{error}</main>;
   }
 
   return (
-    <main style={{ maxWidth: '600px', margin: 'auto', padding: '2rem' }}>
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        {profile.avatarUrl && <img src={profile.avatarUrl} alt={profile.name} style={{ width: '100px', height: '100px', borderRadius: '50%' }} />}
-        <h1>Send a message to {profile.name}</h1>
+    <main className="container">
+      <div className="profile-header">
+        {profile?.avatarUrl && <img src={profile.avatarUrl} alt={profile.name} className="profile-avatar" />}
+        <h1>Send a message to {profile?.name}</h1>
       </div>
 
-      {error && <p style={{ color: '#d32f2f' }}>Error: {error}</p>}
-      {success && <p style={{ color: '#388e3c' }}>{success}</p>}
+      {error && <p className="alert alert-error">{error}</p>}
+      {success && <p className="alert alert-success">{success}</p>}
 
-      <form onSubmit={handleSendMessage} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <form onSubmit={handleSendMessage} className="form-stack">
         <textarea
           placeholder="Leave your anonymous message here..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          style={{ padding: '0.75rem', minHeight: '120px' }}
         />
-        <button type="submit" disabled={loading} style={{ padding: '0.75rem' }}>
+        <button type="submit" disabled={loading} className="btn">
           {loading ? 'Sending...' : 'Send Message'}
         </button>
       </form>

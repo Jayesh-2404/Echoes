@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, FormEvent, useEffect, useCallback, useRef } from 'react';
 
 interface UserData {
@@ -22,27 +23,52 @@ export default function HomePage() {
   const [error, setError] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Use a ref to hold the interval ID to avoid issues with state updates
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // The new, async logout handler
+  const handleLogout = useCallback(async () => {
+    try {
+      // 1. Tell the server to clear the secure cookie
+      await fetch('/api/logout', { method: 'POST' });
+    } catch (err) {
+      console.error("Failed to call logout API, clearing client state anyway.", err);
+    } finally {
+      // 2. Clear all client-side state and storage
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      setUser(null);
+      setMessages([]);
+      setName('');
+      setAvatarUrl('');
+      setError('');
+    }
+  }, []);
 
   const fetchMessages = useCallback(async () => {
     if (!user) return;
     setError('');
     try {
       const res = await fetch(`/api/messages?userId=${user.userId}`);
+
+      if (res.status === 403 || res.status === 401) {
+        throw new Error('Access Denied');
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Failed to fetch messages.' }));
+        throw new Error(data.error);
+      }
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch messages.');
       setMessages(data);
     } catch (err: any) {
       setError(err.message);
-      if (err.message.toLowerCase().includes('denied')) {
-        handleLogout();
+      if (err.message.includes('Access Denied')) {
+        await handleLogout();
       }
-    } finally {
     }
-  }, [user]);
+  }, [user, handleLogout]);
 
-  // On initial load, check for user ID in localStorage
   useEffect(() => {
     try {
       const savedUserId = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -60,17 +86,11 @@ export default function HomePage() {
   useEffect(() => {
     if (user) {
       fetchMessages();
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-     intervalRef.current = setInterval(fetchMessages, 5000);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(fetchMessages, 5000);
     }
-
-    // Cleanup function to clear interval when component unmounts or user changes
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [user, fetchMessages]);
 
@@ -86,8 +106,6 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create link.');
-
-      // Save only the userId to localStorage
       localStorage.setItem(LOCAL_STORAGE_KEY, data.userId);
       setUser(data);
     } catch (err: any) {
@@ -95,18 +113,6 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    // Clear local state and storage
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    setUser(null);
-    setMessages([]);
-    setName('');
-    setAvatarUrl('');
-    // We can't clear the httpOnly cookie from the client, but it will be invalid
-    // when the user tries to fetch messages next time and they will be logged out.
-    // A proper logout would involve an API call to clear the cookie.
   };
 
   if (checkingAuth) {
