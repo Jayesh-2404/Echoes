@@ -23,6 +23,8 @@ model Message {
   message   String
   ipAddress String
   createdAt DateTime @default(now())
+  answer    String?
+  answerAt  DateTime?
   userId    String
   user      User     @relation(fields: [userId], references: [id])
 
