@@ -7,31 +7,40 @@ declare global {
 
 let redis: Redis;
 
-// For local development, Redis is optional
+
 if (!process.env.REDIS_URL) {
   if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'Redis connection failed: REDIS_URL environment variable is not set.'
-    );
+
+    redis = new Redis({
+      host: 'localhost',
+      port: 6379,
+      enableReadyCheck: false,
+      maxRetriesPerRequest: 0,
+      lazyConnect: true,
+      connectTimeout: 1000,
+      commandTimeout: 1000,
+    });
+
+
+    redis.on('error', (err) => {
+      console.warn('Redis not available in production, rate limiting disabled:', err.message);
+    });
   } else {
     // Create a mock Redis client for local development
     redis = new Redis({
       host: 'localhost',
       port: 6379,
-      retryDelayOnFailover: 100,
       enableReadyCheck: false,
       maxRetriesPerRequest: null,
       lazyConnect: true,
     });
 
-    // Handle connection errors gracefully in development
     redis.on('error', (err) => {
       console.warn('Redis connection error (development mode):', err.message);
     });
   }
 } else {
-  // Similar to the Prisma client, we use a singleton pattern to manage the Redis connection
-  // efficiently, especially in a serverless or hot-reloading environment.
+
   if (process.env.NODE_ENV === 'production') {
     redis = new Redis(process.env.REDIS_URL);
   } else {
@@ -52,3 +61,4 @@ if (!process.env.REDIS_URL) {
 }
 
 export { redis };
+
