@@ -6,10 +6,21 @@ import { SendMessageInput } from '@/src/schemas/message.schema';
 
 class MessageService {
   private isSpamContent(message: string): boolean {
-    const spamKeywords = ['http', 'www', '.com', 'free', 'discount', 'prize', 'gift', 'crypto', 'nft'];
+    // Whitelist of legitimate domains that shouldn't be flagged
+    const legitimateDomains = ['github.com', 'linkedin.com', 'twitter.com', 'x.com', 'instagram.com'];
+    const spamKeywords = ['http', 'www', '.com', 'free', 'discount', 'prize', 'gift', 'crypto', 'nft', 'click here', 'limited time', 'act now'];
+
     const lowerCaseMessage = message.toLowerCase();
+
+    // Check if message contains whitelisted domains
+    const hasLegitDomain = legitimateDomains.some(domain => lowerCaseMessage.includes(domain));
+    if (hasLegitDomain) {
+      return false; // Don't flag messages with legitimate domains
+    }
+
+    // Count spam keywords - require 3+ to flag as spam (more conservative)
     const spamWordCount = spamKeywords.filter(keyword => lowerCaseMessage.includes(keyword)).length;
-    return spamWordCount > 1;
+    return spamWordCount >= 3;
   }
 
   public async isIpSuspicious(ip: string): Promise<boolean> {
@@ -22,10 +33,19 @@ class MessageService {
     }
   }
 
-   public async processNewMessage(input: SendMessageInput, ip: string) {
+  public async processNewMessage(input: SendMessageInput, ip: string) {
+    // Only mark IP as suspicious after spam content is detected
+    // This allows for false positives without permanently blocking users
     if (this.isSpamContent(input.message)) {
       try {
-        await redis.sadd('suspicious-ips', ip);
+        // Increment spam count for this IP
+        const spamCount = await redis.incr(`spam-count:${ip}`);
+        await redis.expire(`spam-count:${ip}`, 86400); // 24 hour window
+
+        // Only mark as suspicious after 3 spam attempts
+        if (spamCount >= 3) {
+          await redis.sadd('suspicious-ips', ip);
+        }
       } catch (error) {
         console.warn('Redis not available for marking suspicious IP:', error);
       }
@@ -43,7 +63,7 @@ class MessageService {
     return messageRepository.findByUserId(userId);
   }
   // New public method
-   public async getAnsweredMessagesForUser(userId: string){
+  public async getAnsweredMessagesForUser(userId: string) {
     const messages = await messageRepository.findAnsweredMessagesByUserId(userId); // We will rename this in the repo soon
     return messages.map(msg => ({
       id: msg.id, // Changed from msg.message to msg.id for a stable key
@@ -74,6 +94,21 @@ class MessageService {
       throw new Error('Unauthorized');
     }
     return messageRepository.updateAnswer(messageId, answer);
+  }
+
+  public async markMessageAsRead(messageId: string, token: string) {
+    const message = await messageRepository.findById(messageId);
+    if (!message) {
+      throw new Error('Message not Found');
+    }
+
+    // Validate that the user who owns the message is the one making the request
+    const user = await userRepository.findById(message.userId);
+    if (!user || user.secretToken !== token) {
+      throw new Error('Unauthorized');
+    }
+
+    return messageRepository.markAsRead(messageId);
   }
 }
 

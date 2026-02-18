@@ -21,33 +21,40 @@ class MessageRepository {
     });
   }
   // Find a single message by its ID it will be important for the authorization checks
-  public async findById(id : string): Promise<Message|null>{
-    return prisma.message.findUnique({where :{id}})
+  public async findById(id: string): Promise<Message | null> {
+    return prisma.message.findUnique({ where: { id } });
   }
   // Update a message with an answer and will set the timestamp for it
-  public async updateAnswer(id: string , answer: string): Promise<Message>{
+  public async updateAnswer(id: string, answer: string): Promise<Message> {
     return prisma.message.update({
-      where :{id},
-      data :{
+      where: { id },
+      data: {
         answer,
         answerAt: new Date(),
       },
     });
   }
-  public async findAnswerByUserId(userId : string):Promise<Message[]>{
+  public async findAnswerByUserId(userId: string): Promise<Message[]> {
     return prisma.message.findMany({
-      where:{
+      where: {
         userId,
-        answer:{not : null},
+        answer: { not: null },
       },
-      orderBy:{answerAt: 'desc'},
+      orderBy: { answerAt: 'desc' },
       take: 50,
     });
   }
 
   // Alias method for the service layer
-  public async findAnsweredMessagesByUserId(userId : string):Promise<Message[]>{
+  public async findAnsweredMessagesByUserId(userId: string): Promise<Message[]> {
     return this.findAnswerByUserId(userId);
+  }
+
+  public async markAsRead(id: string): Promise<Message> {
+    return prisma.message.update({
+      where: { id },
+      data: { isRead: true },
+    });
   }
 }
 
