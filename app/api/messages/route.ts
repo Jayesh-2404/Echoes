@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const getMessagesSchema = z.object({
   // accept any non-empty string if user IDs are not CUIDs
   userId: z.string().nonempty(),
